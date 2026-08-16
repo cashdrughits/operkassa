@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-08-16T07:35:09Z",
+  "updated_at": "2026-08-16T08:35:01Z",
   "source": "telegram:@Kursbutyr247",
   "rates": [
     {
       "available": true,
       "buy": 86.7,
-      "sell": 87.4,
+      "sell": 87.2,
       "code": "USD_BLUE",
       "name": "Доллар США (синий)",
       "flag": "🇺🇸"
@@ -13,7 +13,7 @@
     {
       "available": true,
       "buy": 86.5,
-      "sell": 87.1,
+      "sell": 87.0,
       "code": "USD_WHITE",
       "name": "Доллар США (белый)",
       "flag": "🇺🇸"
