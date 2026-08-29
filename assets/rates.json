@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-29T01:35:40Z",
+  "updated_at": "2026-08-29T08:49:00Z",
   "source": "telegram:@Kursbutyr247",
   "rates": [
     {
@@ -20,8 +20,8 @@
     },
     {
       "available": true,
-      "buy": 101.0,
-      "sell": 101.7,
+      "buy": 100.7,
+      "sell": 101.8,
       "code": "EUR",
       "name": "Евро",
       "flag": "🇪🇺"
