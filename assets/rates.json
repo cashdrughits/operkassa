@@ -1,35 +1,35 @@
 {
-  "updated_at": "2026-09-01T07:34:17Z",
+  "updated_at": "2026-09-01T13:20:21Z",
   "source": "telegram:@Kursbutyr247",
   "rates": [
     {
       "available": true,
-      "buy": 87.2,
-      "sell": 87.6,
+      "buy": 87.4,
+      "sell": 88.0,
       "code": "USD_BLUE",
       "name": "Доллар США (синий)",
       "flag": "🇺🇸"
     },
     {
       "available": true,
-      "buy": 86.5,
-      "sell": 87.4,
+      "buy": 87.0,
+      "sell": 87.6,
       "code": "USD_WHITE",
       "name": "Доллар США (белый)",
       "flag": "🇺🇸"
     },
     {
       "available": true,
-      "buy": 100.0,
-      "sell": 101.0,
+      "buy": 100.6,
+      "sell": 101.2,
       "code": "EUR",
       "name": "Евро",
       "flag": "🇪🇺"
     },
     {
       "available": true,
-      "buy": 99.7,
-      "sell": 100.7,
+      "buy": 100.2,
+      "sell": 101.0,
       "code": "EUR500",
       "name": "Евро (купюра 500 €)",
       "flag": "🇪🇺"
