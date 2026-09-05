@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-09-05T13:47:07Z",
+  "updated_at": "2026-09-05T16:40:43Z",
   "source": "telegram:@Kursbutyr247",
   "rates": [
     {
       "available": true,
-      "buy": 87.5,
+      "buy": 87.0,
       "sell": 87.9,
       "code": "USD_BLUE",
       "name": "Доллар США (синий)",
@@ -20,7 +20,7 @@
     },
     {
       "available": true,
-      "buy": 100.7,
+      "buy": 100.5,
       "sell": 101.4,
       "code": "EUR",
       "name": "Евро",
