@@ -1,63 +1,152 @@
-# ОперКасса — сайт-визитка на GitHub Pages
+# Деплой ОперКасса на сервер
 
-Тот же принцип, что и в проекте «Обмен Валют»: статический сайт + бесплатный
-робот (GitHub Actions), который раз в 10 минут читает публичный Telegram-канал
-и обновляет курсы на сайте. Без сервера, без БД.
-
-Отличия от «Обмен Валют» — только дизайн (карточный стиль, бирюзово-золотая
-палитра вместо сине-золотой), контент (адрес, телефон, реальные отзывы) и,
-конечно, свой Telegram-канал. Логика курсов и калькулятора та же.
-
-## Формат сообщения в Telegram-канале
+## Структура проекта
 
 ```
-#курсы
-USD_BLUE 81.00 81.90
-USD_WHITE 79.00 81.00
-EUR 94.00 95.50
-GBP -
-CNY -
+operkassa/
+├── index.html              ← фронтенд сайта
+├── assets/
+│   └── globals.css
+├── scripts/
+│   └── javascript.js       ← теперь грузит /api/rates
+├── admin/
+│   ├── app.py              ← Flask-приложение
+│   ├── init_db.py          ← первичная инициализация БД
+│   ├── requirements.txt
+│   ├── rates.db            ← создаётся автоматически
+│   └── templates/
+│       ├── login.html
+│       └── dashboard.html
+├── operkassa.service       ← systemd-unit
+└── nginx.conf              ← конфиг nginx
 ```
 
-`КОД ПОКУПКА ПРОДАЖА` — обычная строка с курсом. `КОД -` (или `нет`,
-`недоступно`) — валюты нет в наличии, сайт покажет заглушку "уточните по
-телефону". Поддерживаемые коды: `USD_BLUE`, `USD_WHITE`, `EUR`, `GBP`, `CNY`
-(словарь `CURRENCY_INFO` в `scripts/parse_rates.py`, можно расширить).
+---
 
-## Отзывы
+## Установка на Ubuntu/Debian сервер
 
-В отличие от «Обмен Валют» (там были заглушки), здесь сразу зашиты **реальные
-8 отзывов** с настоящими именами, датами, текстами и аватарками (взяты из
-вашего экспорта operkassa-next). Рейтинг "5.0 · 105 оценок" — тоже оттуда,
-захардкожен в `index.html` в двух местах (hero не показывает рейтинг, но блок
-`#reviews` — да). Чтобы обновить/добавить отзывы — редактируйте массив
-`REVIEWS` в `<script>` внизу `index.html`, формат:
+### 1. Клонировать репозиторий
 
-```js
-{ name: "Имя", date: "22 июня", avatar: "https://...", text: "..." }
+Папку можно выбрать любую — `/var/www/operkassa`, `/opt/operkassa`, `/home/ubuntu/operkassa` и т.д.
+Пример с `/opt`:
+
+```bash
+git clone https://github.com/твой-юзер/твой-репо.git /opt/operkassa
 ```
 
-## Настройка деплоя (один раз)
+> Если репо приватное, настрой deploy key:
+> `ssh-keygen -t ed25519 -f ~/.ssh/deploy_key` → добавь публичный ключ в GitHub → Settings → Deploy keys.
 
-Ровно та же процедура, что и для «Обмен Валют»:
+### 2. Виртуальное окружение и зависимости
 
-1. Создайте **публичный** репозиторий, залейте туда всё содержимое этой папки
-   (`index.html`, `assets/`, `scripts/`, `.github/`)
-2. Settings → Pages → Source: **Deploy from a branch** → `main` / `root`
-3. Settings → Secrets and variables → Actions → Variables →
-   `TELEGRAM_CHANNEL` = имя канала ОперКассы без `@`
-4. Settings → Actions → General → **Workflow permissions** → убедитесь, что
-   стоит **Read and write permissions** (иначе коммит с обновлёнными курсами
-   не пройдёт — на это уже наступали в прошлом проекте)
-5. Вкладка Actions → запустите workflow вручную (**Run workflow**) первый раз,
-   проверьте, что `assets/rates.json` обновился
+```bash
+cd /opt/operkassa
+python3 -m venv venv
+source venv/bin/activate
+pip install -r admin/requirements.txt
+```
 
-## Контакты, зашитые в сайт
+### 3. Инициализировать БД и создать первого admin
 
-- Адрес: ул. Бутырская, д. 9к2, м. Савёловская
-- Телефон: +7 (961) 626-99-99
-- WhatsApp: `wa.me/79616269999`
-- Режим: круглосуточно, без выходных
+```bash
+cd /opt/operkassa/admin
 
-Если что-то из этого изменится — ищите в `index.html` (текст встречается в
-hero, футере и блоке "Как нас найти").
+# Дефолтный пароль admin123 (смените после входа!)
+python init_db.py
+
+# Или сразу с нужным паролем:
+ADMIN_PASSWORD=ВашПароль python init_db.py
+```
+
+### 4. Отредактировать и установить systemd-сервис
+
+Открой `operkassa.service` и замени пути если выбрал не `/var/www`:
+
+```bash
+nano /opt/operkassa/operkassa.service
+```
+
+Поменяй строки:
+```ini
+WorkingDirectory=/opt/operkassa/admin
+ExecStart=/opt/operkassa/venv/bin/gunicorn \
+```
+
+Также **обязательно** замени `SECRET_KEY` на случайную строку:
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Затем установи сервис:
+
+```bash
+cp /opt/operkassa/operkassa.service /etc/systemd/system/
+mkdir -p /var/log/operkassa
+chown -R $USER:$USER /opt/operkassa   # или www-data если нужно
+
+systemctl daemon-reload
+systemctl enable operkassa
+systemctl start operkassa
+systemctl status operkassa
+```
+
+### 5. Настроить nginx
+
+```bash
+cp /opt/operkassa/nginx.conf /etc/nginx/sites-available/operkassa
+ln -s /etc/nginx/sites-available/operkassa /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+```
+
+### 6. SSL через certbot
+
+```bash
+apt install certbot python3-certbot-nginx
+certbot --nginx -d operkassa.online
+```
+После этого раскомментируйте HTTPS-блок в nginx.conf.
+
+### 7. Обновление сайта в будущем
+
+```bash
+cd /opt/operkassa
+git pull
+systemctl restart operkassa
+```
+
+---
+
+## Использование
+
+| URL | Что |
+|-----|-----|
+| `https://operkassa.online/` | Публичный сайт |
+| `https://operkassa.online/api/rates` | JSON с курсами (для сайта) |
+| `https://operkassa.online/admin` | Вход в панель управления |
+| `https://operkassa.online/admin/logout` | Выход |
+
+### Как менять курсы
+
+1. Зайти на `/admin`
+2. Ввести логин/пароль
+3. Изменить покупку/продажу, переключить «В наличии» или «Показывать»
+4. Нажать **«Сохранить курсы»**
+
+Сайт подхватит изменения мгновенно (JS опрашивает `/api/rates` каждые 60 секунд).
+
+### Переменные окружения (в operkassa.service)
+
+| Переменная | Описание |
+|---|---|
+| `SECRET_KEY` | Ключ сессий Flask — случайная строка, **обязательно смените** |
+| `ADMIN_PASSWORD` | Только для `init_db.py`, после инициализации не нужна |
+| `PORT` | Порт gunicorn (по умолчанию 5000) |
+
+---
+
+## Быстрая генерация SECRET_KEY
+
+```bash
+python3 -c "import secrets; print(secrets.token_hex(32))"
+```

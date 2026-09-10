@@ -1,0 +1,21 @@
+[Unit]
+Description=ОперКасса — Flask-приложение
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/operkassa/admin
+Environment="SECRET_KEY=ЗАМЕНИТЕ_НА_СЛУЧАЙНУЮ_СТРОКУ"
+Environment="ADMIN_PASSWORD=admin123"
+ExecStart=/var/www/operkassa/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:5000 \
+    --access-logfile /var/log/operkassa/access.log \
+    --error-logfile  /var/log/operkassa/error.log \
+    app:app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
